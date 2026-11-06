@@ -311,12 +311,57 @@ export default function IntroOverlay({ onDone }: IntroOverlayProps) {
             aria-label="点击星球，听见波纹大陆"
           >
             <span className={styles.planetWrap} data-phase={phase}>
-              {/* 星环后半段（在星球之下） */}
-              <span className={styles.rings} data-side="back" aria-hidden="true">
-                <span className={`${styles.ring} ${styles.ringMain}`} />
-                <span className={`${styles.ring} ${styles.ringMain2}`} />
-                <span className={`${styles.ring} ${styles.ringThin}`} />
-              </span>
+              {/* 星环后半段（在星球之下）：SVG 上半弧 */}
+              <svg
+                className={styles.ringsSvg}
+                data-side="back"
+                viewBox="0 0 200 200"
+                preserveAspectRatio="xMidYMid meet"
+                aria-hidden="true"
+              >
+                <defs>
+                  <linearGradient
+                    id="ringBackGrad"
+                    x1="0"
+                    y1="0"
+                    x2="200"
+                    y2="0"
+                    gradientUnits="userSpaceOnUse"
+                    className={styles.gradFlow}
+                  >
+                    <stop offset="0%" stopColor="rgba(255,255,255,0.16)" />
+                    <stop offset="50%" stopColor="rgba(232,180,184,0.22)" />
+                    <stop offset="100%" stopColor="rgba(255,255,255,0.16)" />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M -32 100 A 132 42 0 0 0 232 100"
+                  transform="rotate(-18 100 100)"
+                  fill="none"
+                  stroke="url(#ringBackGrad)"
+                  strokeWidth="7"
+                  strokeLinecap="round"
+                  className={styles.ringBack}
+                />
+                <path
+                  d="M -22 100 A 122 39 0 0 0 222 100"
+                  transform="rotate(-14 100 100)"
+                  fill="none"
+                  stroke="url(#ringBackGrad)"
+                  strokeWidth="6"
+                  strokeLinecap="round"
+                  className={styles.ringBack}
+                />
+                <path
+                  d="M -42 100 A 142 46 0 0 0 242 100"
+                  transform="rotate(-22 100 100)"
+                  fill="none"
+                  stroke="url(#ringBackGrad)"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  className={`${styles.ringBack} ${styles.ringThinPath}`}
+                />
+              </svg>
 
               {/* 星球本体：三层叠加 */}
               <span className={styles.planet}>
@@ -444,12 +489,67 @@ export default function IntroOverlay({ onDone }: IntroOverlayProps) {
                 <span className={styles.cloud} style={{ top: "72%", left: "28%", ["--cd" as string]: "-8s" }} />
               </span>
 
-              {/* 星环前半段（在星球之上） */}
-              <span className={styles.rings} data-side="front" aria-hidden="true">
-                <span className={`${styles.ring} ${styles.ringMain}`} />
-                <span className={`${styles.ring} ${styles.ringMain2}`} />
-                <span className={`${styles.ring} ${styles.ringThin}`} />
-              </span>
+              {/* 星环前半段（在星球之上）：SVG 下半弧 + 环带阴影 */}
+              <svg
+                className={styles.ringsSvg}
+                data-side="front"
+                viewBox="0 0 200 200"
+                preserveAspectRatio="xMidYMid meet"
+                aria-hidden="true"
+              >
+                <defs>
+                  <linearGradient
+                    id="ringFrontGrad"
+                    x1="0"
+                    y1="0"
+                    x2="200"
+                    y2="0"
+                    gradientUnits="userSpaceOnUse"
+                    className={styles.gradFlow}
+                  >
+                    <stop offset="0%" stopColor="rgba(212,138,143,0.35)" />
+                    <stop offset="50%" stopColor="rgba(255,255,255,0.55)" />
+                    <stop offset="100%" stopColor="rgba(212,138,143,0.35)" />
+                  </linearGradient>
+                </defs>
+                {/* 环带阴影：星球表面环带穿过区域的暗带，只在前半部分 */}
+                <path
+                  d="M -32 100 A 132 42 0 0 1 232 100"
+                  transform="rotate(-18 100 100)"
+                  fill="none"
+                  stroke="rgba(160,90,100,0.12)"
+                  strokeWidth="14"
+                  className={styles.ringShadow}
+                />
+                {/* 前半环 */}
+                <path
+                  d="M -32 100 A 132 42 0 0 1 232 100"
+                  transform="rotate(-18 100 100)"
+                  fill="none"
+                  stroke="url(#ringFrontGrad)"
+                  strokeWidth="7"
+                  strokeLinecap="round"
+                  className={styles.ringFront}
+                />
+                <path
+                  d="M -22 100 A 122 39 0 0 1 222 100"
+                  transform="rotate(-14 100 100)"
+                  fill="none"
+                  stroke="url(#ringFrontGrad)"
+                  strokeWidth="6"
+                  strokeLinecap="round"
+                  className={styles.ringFront}
+                />
+                <path
+                  d="M -42 100 A 142 46 0 0 1 242 100"
+                  transform="rotate(-22 100 100)"
+                  fill="none"
+                  stroke="url(#ringFrontGrad)"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  className={`${styles.ringFront} ${styles.ringThinPath}`}
+                />
+              </svg>
             </span>
           </button>
         </div>

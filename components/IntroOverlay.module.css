@@ -368,124 +368,44 @@
   animation-duration: 14s;
 }
 
-/* ===== 星环（前/后两段，带厚度与明暗） ===== */
-.rings {
+/* ===== 星环（SVG 绘制，前后半弧精确遮挡） ===== */
+.ringsSvg {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
   pointer-events: none;
-  perspective: 600px;
-}
-
-.rings[data-side="back"] {
-  z-index: 1;
-}
-
-.rings[data-side="front"] {
-  z-index: 3;
-}
-
-.ring {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 150%;
-  height: 150%;
-  border-radius: 50%;
-  transform: translate(-50%, -50%) rotateX(72deg) rotateZ(var(--rz, -18deg));
-  transform-style: preserve-3d;
-  background: conic-gradient(
-    from 0deg,
-    transparent 0deg,
-    rgba(232, 180, 184, 0.35) 60deg,
-    rgba(255, 255, 255, 0.55) 140deg,
-    rgba(212, 138, 143, 0.3) 240deg,
-    transparent 360deg
-  );
-  /* 用 mask 挖出中心，形成环带 */
-  -webkit-mask: radial-gradient(
-    circle,
-    transparent calc(50% - var(--thick, 5px)),
-    #000 calc(50% - var(--thick, 5px))
-  );
-  mask: radial-gradient(
-    circle,
-    transparent calc(50% - var(--thick, 5px)),
-    #000 calc(50% - var(--thick, 5px))
-  );
   animation: ringBreath 6s ease-in-out infinite alternate;
 }
 
-.ringMain {
-  --thick: 5px;
-  --rz: -18deg;
-  animation-name: ringSpinMain, ringBreath;
-  animation-duration: 60s, 6s;
-  animation-timing-function: linear, ease-in-out;
-  animation-iteration-count: infinite, infinite;
-  animation-direction: normal, alternate;
+.ringsSvg[data-side="back"] {
+  z-index: 1;
 }
 
-.ringMain2 {
-  --thick: 4px;
-  --rz: -14deg;
-  width: 142%;
-  height: 142%;
-  opacity: 0.7;
-  animation-name: ringSpinMain, ringBreath;
-  animation-duration: 75s, 6s;
-  animation-timing-function: linear, ease-in-out;
-  animation-iteration-count: infinite, infinite;
-  animation-direction: reverse, alternate;
+.ringsSvg[data-side="front"] {
+  z-index: 3;
 }
 
-.ringThin {
-  --thick: 2px;
-  --rz: -22deg;
-  width: 132%;
-  height: 132%;
-  opacity: 0.5;
-  animation-name: ringSpinThin, ringBreath;
-  animation-duration: 90s, 6s;
-  animation-timing-function: linear, ease-in-out;
-  animation-iteration-count: infinite, infinite;
-  animation-direction: reverse, alternate;
+/* 后半环：较暗，带轻微模糊 */
+.ringBack {
+  opacity: 0.55;
+  filter: blur(0.5px);
 }
 
-/* 后半段：只显示上半椭圆，透明度降到 0.5（被星球遮挡） */
-.rings[data-side="back"] .ring {
-  -webkit-mask: radial-gradient(
-      circle,
-      transparent calc(50% - var(--thick, 5px)),
-      #000 calc(50% - var(--thick, 5px))
-    ),
-    linear-gradient(to bottom, #000 50%, transparent 50%);
-  -webkit-mask-composite: source-in;
-  mask: radial-gradient(
-      circle,
-      transparent calc(50% - var(--thick, 5px)),
-      #000 calc(50% - var(--thick, 5px))
-    ),
-    linear-gradient(to bottom, #000 50%, transparent 50%);
-  mask-composite: intersect;
-  opacity: 0.5;
+/* 前半环：更亮，无模糊 */
+.ringFront {
+  opacity: 0.95;
 }
 
-/* 前半段：只显示下半椭圆 */
-.rings[data-side="front"] .ring {
-  -webkit-mask: radial-gradient(
-      circle,
-      transparent calc(50% - var(--thick, 5px)),
-      #000 calc(50% - var(--thick, 5px))
-    ),
-    linear-gradient(to top, #000 50%, transparent 50%);
-  -webkit-mask-composite: source-in;
-  mask: radial-gradient(
-      circle,
-      transparent calc(50% - var(--thick, 5px)),
-      #000 calc(50% - var(--thick, 5px))
-    ),
-    linear-gradient(to top, #000 50%, transparent 50%);
-  mask-composite: intersect;
+/* 环带阴影：星球表面环带穿过区域的暗带 */
+.ringShadow {
+  filter: blur(6px);
+}
+
+/* 渐变流动：水平移动模拟材质流动 */
+.gradFlow {
+  animation: gradFlow 40s linear infinite;
 }
 
 /* playing 状态星球光晕增强：扩大呼吸范围 */
@@ -643,37 +563,25 @@
   }
 }
 
-/* 主环自转（正/反向由 animation-direction 控制） */
-@keyframes ringSpinMain {
-  from {
-    transform: translate(-50%, -50%) rotateX(72deg)
-      rotateZ(var(--rz, -18deg)) rotate(0deg);
-  }
-  to {
-    transform: translate(-50%, -50%) rotateX(72deg)
-      rotateZ(var(--rz, -18deg)) rotate(360deg);
-  }
-}
-
-/* 细环自转（反向） */
-@keyframes ringSpinThin {
-  from {
-    transform: translate(-50%, -50%) rotateX(72deg)
-      rotateZ(var(--rz, -22deg)) rotate(0deg);
-  }
-  to {
-    transform: translate(-50%, -50%) rotateX(72deg)
-      rotateZ(var(--rz, -22deg)) rotate(360deg);
-  }
-}
-
-/* 环带亮度呼吸 */
+/* 环带亮度呼吸（作用于整个 SVG，与路径自身 opacity 相乘） */
 @keyframes ringBreath {
   from {
-    opacity: 0.7;
+    opacity: 0.85;
   }
   to {
     opacity: 1;
+  }
+}
+
+/* 环带渐变流动：水平平移渐变，模拟材质流动，不改变几何位置 */
+@keyframes gradFlow {
+  from {
+    x1: 0px;
+    x2: 200px;
+  }
+  to {
+    x1: 200px;
+    x2: 400px;
   }
 }
 
@@ -792,8 +700,8 @@
     display: none;
   }
 
-  /* 环带只保留 2 条（1 主 1 细），隐藏第二条主环 */
-  .ringMain2 {
+  /* 移动端去掉细环，保留 2 条主环 */
+  .ringThinPath {
     display: none;
   }
 
@@ -837,7 +745,8 @@
   .planetStars,
   .cloud,
   .vortex,
-  .ring {
+  .ringsSvg,
+  .gradFlow {
     animation: none;
   }
 
