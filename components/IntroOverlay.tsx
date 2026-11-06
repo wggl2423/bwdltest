@@ -20,6 +20,48 @@ function prefersReducedMotion() {
   );
 }
 
+/** canvas 绘制星空：80–120 个白点，随机位置/透明度，缓慢闪烁 */
+function drawStars(canvas: HTMLCanvasElement) {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  ctx.scale(dpr, dpr);
+
+  const isMobile = w < 640;
+  const count = isMobile ? 50 : 100;
+
+  // 预生成星星参数（位置、基础透明度、闪烁相位）
+  const stars = Array.from({ length: count }, () => ({
+    x: Math.random() * w,
+    y: Math.random() * h,
+    r: Math.random() * 1.2 + 0.3,
+    baseAlpha: Math.random() * 0.6 + 0.2,
+    phase: Math.random() * Math.PI * 2,
+  }));
+
+  let raf = 0;
+
+  const render = (t: number) => {
+    ctx.clearRect(0, 0, w, h);
+    for (const s of stars) {
+      const alpha = s.baseAlpha + Math.sin(t * 0.001 + s.phase) * 0.2;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 255, 255, ${Math.max(0.05, Math.min(0.9, alpha))})`;
+      ctx.fill();
+    }
+    raf = requestAnimationFrame(render);
+  };
+
+  raf = requestAnimationFrame(render);
+  return () => cancelAnimationFrame(raf);
+}
+
 export default function IntroOverlay({ onDone }: IntroOverlayProps) {
   // 状态机：idle → playing → entering → done
   const [phase, setPhase] = useState<Phase>("idle");
@@ -32,12 +74,32 @@ export default function IntroOverlay({ onDone }: IntroOverlayProps) {
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const enterButtonRef = useRef<HTMLButtonElement>(null);
+  const starsCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  // canvas 星空
+  useEffect(() => {
+    const canvas = starsCanvasRef.current;
+    if (!canvas) return;
+    const cleanup = drawStars(canvas);
+
+    const handleResize = () => {
+      cleanup?.();
+      const next = drawStars(canvas);
+      // 重新绘制；清理函数在 effect 清理时统一处理
+    };
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      cleanup?.();
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   const trimmedName = name.trim();
   const canEnter = trimmedName.length > 0 && trimmedName.length <= NAME_MAX;
 
-  // 点击唱片：播放音乐并进入名字输入
-  const handleDiscClick = () => {
+  // 点击星球：播放音乐并进入名字输入
+  const handlePlanetClick = () => {
     if (phase !== "idle") return;
     setPhase("playing");
 
@@ -48,7 +110,7 @@ export default function IntroOverlay({ onDone }: IntroOverlayProps) {
     const playPromise = audio.play();
     if (playPromise) {
       playPromise.catch((error) => {
-        // 播放失败静默降级：唱片照转、名字照填、仍可进入
+        // 播放失败静默降级：星球照常、名字照填、仍可进入
         console.error("背景音乐播放失败，已降级为静音模式", error);
       });
     }
@@ -65,7 +127,7 @@ export default function IntroOverlay({ onDone }: IntroOverlayProps) {
     console.error("背景音乐加载失败，已降级为静音模式");
   };
 
-  // 以点击坐标为圆心计算波纹尺寸，scale 0 → 1 覆盖全屏
+  // 以点击坐标为圆心计算波纹尺寸，scale 0 → 6 爆发
   const beginEntering = (x: number, y: number) => {
     if (phase !== "playing" || !canEnter) return;
 
@@ -120,6 +182,8 @@ export default function IntroOverlay({ onDone }: IntroOverlayProps) {
       aria-modal="true"
       aria-label="波纹大陆开场"
     >
+      <canvas ref={starsCanvasRef} className={styles.stars} aria-hidden="true" />
+
       <audio
         ref={audioRef}
         src={`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/audio/baiwuliaolai.mp3`}
@@ -138,19 +202,30 @@ export default function IntroOverlay({ onDone }: IntroOverlayProps) {
 
         <button
           type="button"
-          className={styles.discButton}
-          onClick={handleDiscClick}
-          aria-label="点击唱片，听见波纹大陆"
+          className={styles.planetButton}
+          onClick={handlePlanetClick}
+          aria-label="点击星球，听见波纹大陆"
         >
-          <span className={styles.disc} data-spinning={phase !== "idle"}>
-            <span className={styles.discLabel} />
-            <span className={styles.discHole} />
+          <span className={styles.planet} data-phase={phase} />
+          <span className={styles.rings} aria-hidden="true">
+            <span className={`${styles.ring} ${styles.ringOuter}`} />
+            <span className={`${styles.ring} ${styles.ringInner}`} />
           </span>
         </button>
 
+        {/* 波纹震荡环：仅 idle / playing 显示 */}
+        {(phase === "idle" || phase === "playing") && (
+          <div className={styles.rippleRings} data-phase={phase} aria-hidden="true">
+            <span className={styles.rippleRing} />
+            <span className={styles.rippleRing} />
+            <span className={styles.rippleRing} />
+            <span className={styles.rippleRing} />
+          </div>
+        )}
+
         <p className={styles.copy}>
           {phase === "idle"
-            ? "点击唱片，听见波纹大陆"
+            ? "点击星球，听见波纹大陆"
             : "波纹大陆需要记住你的名字"}
         </p>
 

@@ -1,44 +1,34 @@
+/* ============================================================
+   开场层视觉：粉色星球 + 宇宙 + 波纹震荡
+   状态机逻辑（idle → playing → entering → done）不变，仅重做视觉层
+   ============================================================ */
+
 .overlay {
   position: fixed;
   inset: 0;
   z-index: 100;
   display: grid;
   place-items: center;
-  overflow-y: auto;
+  overflow: hidden;
   padding: 32px 24px;
   background:
     radial-gradient(
-      120% 78% at 50% 10%,
-      rgba(232, 180, 184, 0.26),
-      transparent 62%
-    ),
-    var(--bg);
+      120% 80% at 50% 18%,
+      var(--space-mid),
+      var(--space-deep) 70%
+    );
 }
 
-/* 唱片后方的低透明度同心装饰环 */
-.overlay::before,
-.overlay::after {
-  content: "";
+/* 星空 canvas */
+.stars {
   position: absolute;
-  top: 46%;
-  left: 50%;
-  border: 1px solid rgba(232, 180, 184, 0.34);
-  border-radius: 50%;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
-  transform: translate(-50%, -50%);
 }
 
-.overlay::before {
-  width: 320px;
-  height: 320px;
-}
-
-.overlay::after {
-  width: 440px;
-  height: 440px;
-  border-color: rgba(232, 180, 184, 0.16);
-}
-
+/* 开场层淡出 */
 .overlay[data-phase="done"] {
   animation: overlayOut 300ms ease-out forwards;
 }
@@ -47,106 +37,200 @@
   position: absolute;
   right: 16px;
   bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-  z-index: 3;
+  z-index: 5;
   display: grid;
   place-items: center;
   min-width: 44px;
   min-height: 44px;
   padding: 0 14px;
   font-size: 12px;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.6);
   letter-spacing: 0.04em;
   transition: color 200ms ease-out;
 }
 
 .skip:hover {
-  color: var(--pink-deep);
+  color: var(--planet-pink);
 }
 
 .center {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 22px;
 }
 
-/* 全站唯一一处手写体点缀 */
 .brand {
   font-family: var(--font-hand);
   font-size: 26px;
   letter-spacing: 0.16em;
-  color: var(--pink-deep);
+  color: var(--planet-pink);
+  text-shadow: 0 0 24px var(--planet-glow);
 }
 
-.discButton {
+/* ===== 星球 ===== */
+.planetButton {
+  position: relative;
   padding: 0;
   border-radius: 50%;
   transition: transform 200ms ease-out;
 }
 
-.discButton:hover {
+.planetButton:hover {
   transform: scale(1.02);
 }
 
-.discButton:active {
+.planetButton:active {
   transform: scale(0.99);
 }
 
-.disc {
+.planet {
   position: relative;
   display: block;
-  width: 200px;
-  height: 200px;
+  width: min(60vw, 360px);
+  height: min(60vw, 360px);
   border-radius: 50%;
+  /* 球体高光在左上，主体粉色，右下暗部 */
   background:
-    repeating-radial-gradient(
-      circle at center,
-      rgba(255, 255, 255, 0.07) 0 1px,
-      transparent 1px 7px
-    ),
-    radial-gradient(circle at 34% 28%, #4c4846, #33302e 72%);
+    radial-gradient(
+      circle at 32% 28%,
+      #f5d6d9 0%,
+      var(--planet-pink) 38%,
+      var(--planet-deep) 78%,
+      #a8606b 100%
+    );
+  /* 光晕 */
   box-shadow:
-    0 14px 34px rgba(61, 58, 56, 0.2),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
-  animation: discFloat 3.6s ease-in-out infinite;
+    0 0 48px 12px var(--planet-glow),
+    0 0 96px 32px rgba(232, 180, 184, 0.12),
+    inset -18px -22px 48px rgba(120, 60, 70, 0.35),
+    inset 12px 14px 30px rgba(255, 230, 235, 0.3);
+  animation: planetFloat 8s ease-in-out infinite alternate;
 }
 
-.disc[data-spinning="true"] {
-  animation: discSpin 8s linear infinite;
+/* playing 状态高光增强 */
+.planet[data-phase="playing"] {
+  box-shadow:
+    0 0 60px 16px var(--planet-glow),
+    0 0 120px 40px rgba(232, 180, 184, 0.18),
+    inset -18px -22px 48px rgba(120, 60, 70, 0.35),
+    inset 16px 18px 36px rgba(255, 240, 245, 0.45);
 }
 
-.discLabel {
+/* 表面斑纹：2 层低透明度径向渐变 */
+.planet::before,
+.planet::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.planet::before {
+  top: 22%;
+  left: 18%;
+  width: 42%;
+  height: 30%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 220, 225, 0.28),
+    transparent 70%
+  );
+  transform: rotate(-12deg);
+}
+
+.planet::after {
+  bottom: 20%;
+  right: 16%;
+  width: 36%;
+  height: 26%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(168, 96, 107, 0.22),
+    transparent 70%
+  );
+  transform: rotate(8deg);
+}
+
+/* ===== 行星环 ===== */
+.rings {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  perspective: 600px;
+}
+
+.ring {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 64px;
-  height: 64px;
+  border: 1px solid rgba(232, 180, 184, 0.35);
   border-radius: 50%;
-  background: var(--pink-soft);
-  box-shadow: inset 0 0 0 1px rgba(212, 138, 143, 0.4);
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) rotateX(70deg) rotateZ(-15deg);
+  animation: ringSpin 40s linear infinite;
 }
 
-.discHole {
+.ringOuter {
+  width: 130%;
+  height: 130%;
+}
+
+.ringInner {
+  width: 112%;
+  height: 112%;
+  border-color: rgba(232, 180, 184, 0.22);
+  animation-duration: 28s;
+  animation-direction: reverse;
+}
+
+/* ===== 波纹震荡环 ===== */
+.rippleRings {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  transform: translate(-50%, -50%);
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
 }
 
+.rippleRing {
+  position: absolute;
+  width: min(60vw, 360px);
+  height: min(60vw, 360px);
+  border: 1px solid var(--planet-glow);
+  border-radius: 50%;
+  transform: scale(0.8);
+  opacity: 0.5;
+  animation: ripplePulse 3s ease-out infinite;
+}
+
+.rippleRing:nth-child(2) {
+  animation-delay: 0.6s;
+}
+
+.rippleRing:nth-child(3) {
+  animation-delay: 1.2s;
+}
+
+.rippleRing:nth-child(4) {
+  animation-delay: 1.8s;
+}
+
+/* playing 状态波纹加速 */
+.rippleRings[data-phase="playing"] .rippleRing {
+  animation-duration: 1.6s;
+}
+
+/* ===== 文案 ===== */
 .copy {
   font-size: 14px;
   letter-spacing: 0.08em;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
 }
 
+/* ===== 输入表单 ===== */
 .form {
   display: flex;
   gap: 12px;
@@ -160,23 +244,22 @@
   padding: 0 16px;
   font: inherit;
   font-size: 14px;
-  color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--border);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: var(--radius-md);
   transition: border-color 200ms ease-out;
 }
 
 .input::placeholder {
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .input:focus-visible {
-  border-color: var(--pink-primary);
+  border-color: var(--planet-pink);
   outline: none;
 }
 
-/* 移动端虚拟键盘弹出时，输入框保持在可视区 */
 .input:focus {
   scroll-margin-bottom: 40vh;
 }
@@ -187,48 +270,68 @@
   padding: 0 26px;
   font-size: 14px;
   letter-spacing: 0.08em;
-  background: var(--pink-primary);
+  background: var(--planet-pink);
   border-radius: var(--radius-md);
-  color: var(--text);
+  color: var(--space-deep);
   transition: background-color 200ms ease-out;
 }
 
 .enter:hover:not(:disabled) {
-  background: var(--pink-deep);
+  background: var(--planet-deep);
+  color: #fff;
 }
 
 .enter:disabled {
-  background: var(--pink-soft);
-  color: var(--text-muted);
+  background: rgba(232, 180, 184, 0.4);
+  color: rgba(13, 10, 20, 0.5);
   cursor: not-allowed;
 }
 
+/* ===== entering 爆发波纹 ===== */
 .ripple {
   position: fixed;
-  z-index: 2;
+  z-index: 6;
   border-radius: 50%;
   pointer-events: none;
-  background: radial-gradient(circle, var(--pink-primary), var(--pink-soft) 70%);
+  background: radial-gradient(
+    circle,
+    var(--planet-pink),
+    rgba(232, 180, 184, 0.3) 60%,
+    transparent 80%
+  );
   transform: translate(-50%, -50%) scale(0);
-  animation: rippleGrow 800ms ease-out forwards;
+  animation: rippleBurst 800ms ease-out forwards;
 }
 
-@keyframes discFloat {
-  0%,
+/* ===== keyframes ===== */
+@keyframes planetFloat {
+  0% {
+    transform: translateY(-8px) translateX(-4px);
+  }
   100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-7px);
+    transform: translateY(8px) translateX(4px);
   }
 }
 
-@keyframes discSpin {
+@keyframes ringSpin {
   from {
-    transform: rotate(0deg);
+    transform: translate(-50%, -50%) rotateX(70deg) rotateZ(-15deg)
+      rotate(0deg);
   }
   to {
-    transform: rotate(360deg);
+    transform: translate(-50%, -50%) rotateX(70deg) rotateZ(-15deg)
+      rotate(360deg);
+  }
+}
+
+@keyframes ripplePulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
   }
 }
 
@@ -243,12 +346,14 @@
   }
 }
 
-@keyframes rippleGrow {
+@keyframes rippleBurst {
   from {
     transform: translate(-50%, -50%) scale(0);
+    opacity: 0.6;
   }
   to {
-    transform: translate(-50%, -50%) scale(1);
+    transform: translate(-50%, -50%) scale(6);
+    opacity: 0;
   }
 }
 
@@ -258,10 +363,16 @@
   }
 }
 
+/* ===== 移动端 ===== */
 @media (max-width: 380px) {
-  .disc {
-    width: 172px;
-    height: 172px;
+  .planet {
+    width: min(70vw, 280px);
+    height: min(70vw, 280px);
+  }
+
+  .rippleRing {
+    width: min(70vw, 280px);
+    height: min(70vw, 280px);
   }
 
   .form {
@@ -278,10 +389,19 @@
   }
 }
 
+/* ===== 降级：关闭动画，保留静态星球 ===== */
 @media (prefers-reduced-motion: reduce) {
-  .disc,
-  .disc[data-spinning="true"] {
+  .planet {
     animation: none;
+  }
+
+  .ring {
+    animation: none;
+  }
+
+  .rippleRing {
+    animation: none;
+    opacity: 0;
   }
 
   .form {
