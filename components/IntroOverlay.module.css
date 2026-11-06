@@ -208,7 +208,7 @@
   word-break: break-word;
 }
 
-/* ===== 星球 ===== */
+/* ===== 星球舞台 ===== */
 .planetButton {
   position: relative;
   padding: 0;
@@ -224,72 +224,120 @@
   transform: scale(0.99);
 }
 
-.planet {
+/* 星球+星环的整体容器：负责漂浮 + 光晕呼吸 */
+.planetWrap {
+  --glow-min: 40px;
+  --glow-max: 60px;
   position: relative;
   display: block;
   width: min(38vw, 200px);
   height: min(38vw, 200px);
+  filter: drop-shadow(0 0 var(--glow-min) var(--planet-glow));
+  animation-name: planetFloat, glowBreath;
+  animation-duration: 10s, 8s;
+  animation-timing-function: ease-in-out, ease-in-out;
+  animation-iteration-count: infinite, infinite;
+  animation-direction: alternate, alternate;
+}
+
+/* ===== 星球本体（三层叠加，overflow 裁切圆形） ===== */
+.planet {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  z-index: 2;
+}
+
+/* 第 1 层 球体底 */
+.planetBase {
+  position: absolute;
+  inset: 0;
   border-radius: 50%;
   background:
     radial-gradient(
-      circle at 32% 28%,
-      #fae0e3 0%,
-      var(--planet-pink) 40%,
-      var(--planet-deep) 80%,
-      #b86e79 100%
+      circle at 30% 30%,
+      rgba(255, 255, 255, 0.9) 0%,
+      var(--planet-pink) 42%,
+      var(--planet-deep) 82%
+    ),
+    radial-gradient(
+      circle at 75% 75%,
+      rgba(160, 90, 100, 0.35),
+      transparent 55%
     );
+  background-blend-mode: normal, multiply;
   box-shadow:
-    0 0 40px 10px var(--planet-glow),
-    0 0 80px 24px rgba(232, 180, 184, 0.1),
-    inset -12px -16px 36px rgba(150, 80, 90, 0.3),
-    inset 8px 10px 22px rgba(255, 235, 240, 0.35);
-  animation: planetFloat 8s ease-in-out infinite alternate;
+    inset -10px -14px 30px rgba(150, 80, 90, 0.3),
+    inset 8px 10px 20px rgba(255, 235, 240, 0.3);
 }
 
-.planet[data-phase="playing"] {
-  box-shadow:
-    0 0 52px 14px var(--planet-glow),
-    0 0 100px 32px rgba(232, 180, 184, 0.15),
-    inset -12px -16px 36px rgba(150, 80, 90, 0.3),
-    inset 10px 12px 28px rgba(255, 240, 245, 0.5);
-}
-
-/* 表面斑纹 */
-.planet::before,
-.planet::after {
-  content: "";
+/* 第 2 层 拼图纹路 */
+.planetTexture {
   position: absolute;
-  border-radius: 50%;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.22;
+  transform: rotate(-12deg);
+  filter: blur(0.3px);
+  animation: planetSpin 40s linear infinite;
   pointer-events: none;
 }
 
-.planet::before {
-  top: 24%;
-  left: 20%;
-  width: 40%;
-  height: 28%;
-  background: radial-gradient(
-    ellipse at center,
-    rgba(255, 225, 230, 0.3),
-    transparent 70%
-  );
-  transform: rotate(-10deg);
+/* 第 3 层 星点 */
+.planetStars {
+  position: absolute;
+  inset: 0;
+  animation: planetSpin 40s linear infinite;
+  pointer-events: none;
 }
 
-.planet::after {
-  bottom: 22%;
-  right: 18%;
-  width: 34%;
-  height: 24%;
-  background: radial-gradient(
-    ellipse at center,
-    rgba(180, 100, 110, 0.2),
-    transparent 70%
-  );
-  transform: rotate(10deg);
+.starDot {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
+  transform: translate(-50%, -50%);
 }
 
-/* ===== 行星环 ===== */
+.starGlow {
+  width: 3px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
+}
+
+/* 云层 */
+.cloud {
+  position: absolute;
+  width: 44%;
+  height: 22%;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 255, 255, 0.12),
+    transparent 70%
+  );
+  filter: blur(20px);
+  transform: translateX(0);
+  animation: cloudDrift 12s ease-in-out infinite alternate;
+  animation-delay: var(--cd, 0s);
+  pointer-events: none;
+}
+
+.cloudAlt {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(212, 138, 143, 0.15),
+    transparent 70%
+  );
+  filter: blur(24px);
+  animation-duration: 14s;
+}
+
+/* ===== 星环（前/后两段，带厚度与明暗） ===== */
 .rings {
   position: absolute;
   inset: 0;
@@ -297,26 +345,122 @@
   perspective: 600px;
 }
 
+.rings[data-side="back"] {
+  z-index: 1;
+}
+
+.rings[data-side="front"] {
+  z-index: 3;
+}
+
 .ring {
   position: absolute;
   top: 50%;
   left: 50%;
-  border: 1px solid rgba(212, 138, 143, 0.25);
+  width: 150%;
+  height: 150%;
   border-radius: 50%;
-  transform: translate(-50%, -50%) rotateX(70deg) rotateZ(-15deg);
-  animation: ringSpin 40s linear infinite;
+  transform: translate(-50%, -50%) rotateX(72deg) rotateZ(var(--rz, -18deg));
+  transform-style: preserve-3d;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(232, 180, 184, 0.35) 60deg,
+    rgba(255, 255, 255, 0.55) 140deg,
+    rgba(212, 138, 143, 0.3) 240deg,
+    transparent 360deg
+  );
+  /* 用 mask 挖出中心，形成环带 */
+  -webkit-mask: radial-gradient(
+    circle,
+    transparent calc(50% - var(--thick, 5px)),
+    #000 calc(50% - var(--thick, 5px))
+  );
+  mask: radial-gradient(
+    circle,
+    transparent calc(50% - var(--thick, 5px)),
+    #000 calc(50% - var(--thick, 5px))
+  );
+  animation: ringBreath 6s ease-in-out infinite alternate;
 }
 
-.ringOuter {
-  width: 140%;
-  height: 140%;
+.ringMain {
+  --thick: 5px;
+  --rz: -18deg;
+  animation-name: ringSpinMain, ringBreath;
+  animation-duration: 60s, 6s;
+  animation-timing-function: linear, ease-in-out;
+  animation-iteration-count: infinite, infinite;
+  animation-direction: normal, alternate;
 }
 
-.ringInner {
-  width: 120%;
-  height: 120%;
-  animation-duration: 28s;
-  animation-direction: reverse;
+.ringMain2 {
+  --thick: 4px;
+  --rz: -14deg;
+  width: 142%;
+  height: 142%;
+  opacity: 0.7;
+  animation-name: ringSpinMain, ringBreath;
+  animation-duration: 75s, 6s;
+  animation-timing-function: linear, ease-in-out;
+  animation-iteration-count: infinite, infinite;
+  animation-direction: reverse, alternate;
+}
+
+.ringThin {
+  --thick: 2px;
+  --rz: -22deg;
+  width: 132%;
+  height: 132%;
+  opacity: 0.5;
+  animation-name: ringSpinThin, ringBreath;
+  animation-duration: 90s, 6s;
+  animation-timing-function: linear, ease-in-out;
+  animation-iteration-count: infinite, infinite;
+  animation-direction: reverse, alternate;
+}
+
+/* 后半段：只显示上半椭圆，透明度降到 0.5（被星球遮挡） */
+.rings[data-side="back"] .ring {
+  -webkit-mask: radial-gradient(
+      circle,
+      transparent calc(50% - var(--thick, 5px)),
+      #000 calc(50% - var(--thick, 5px))
+    ),
+    linear-gradient(to bottom, #000 50%, transparent 50%);
+  -webkit-mask-composite: source-in;
+  mask: radial-gradient(
+      circle,
+      transparent calc(50% - var(--thick, 5px)),
+      #000 calc(50% - var(--thick, 5px))
+    ),
+    linear-gradient(to bottom, #000 50%, transparent 50%);
+  mask-composite: intersect;
+  opacity: 0.5;
+}
+
+/* 前半段：只显示下半椭圆 */
+.rings[data-side="front"] .ring {
+  -webkit-mask: radial-gradient(
+      circle,
+      transparent calc(50% - var(--thick, 5px)),
+      #000 calc(50% - var(--thick, 5px))
+    ),
+    linear-gradient(to top, #000 50%, transparent 50%);
+  -webkit-mask-composite: source-in;
+  mask: radial-gradient(
+      circle,
+      transparent calc(50% - var(--thick, 5px)),
+      #000 calc(50% - var(--thick, 5px))
+    ),
+    linear-gradient(to top, #000 50%, transparent 50%);
+  mask-composite: intersect;
+}
+
+/* playing 状态星球光晕增强：扩大呼吸范围 */
+.planetWrap[data-phase="playing"] {
+  --glow-min: 52px;
+  --glow-max: 72px;
 }
 
 /* ===== 波纹震荡环 ===== */
@@ -441,21 +585,74 @@
 /* ===== keyframes ===== */
 @keyframes planetFloat {
   0% {
-    transform: translateY(-8px) translateX(-4px);
+    transform: translateY(-6px) translateX(-3px);
   }
   100% {
-    transform: translateY(8px) translateX(4px);
+    transform: translateY(6px) translateX(3px);
   }
 }
 
-@keyframes ringSpin {
+/* 星球自转：纹路 + 星点跟随，从 -12° 起旋转一圈回到 -12°（无缝循环） */
+@keyframes planetSpin {
   from {
-    transform: translate(-50%, -50%) rotateX(70deg) rotateZ(-15deg)
-      rotate(0deg);
+    transform: rotate(-12deg);
   }
   to {
-    transform: translate(-50%, -50%) rotateX(70deg) rotateZ(-15deg)
-      rotate(360deg);
+    transform: rotate(calc(-12deg + 360deg));
+  }
+}
+
+/* 云层横向漂移 */
+@keyframes cloudDrift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(10px);
+  }
+}
+
+/* 主环自转（正/反向由 animation-direction 控制） */
+@keyframes ringSpinMain {
+  from {
+    transform: translate(-50%, -50%) rotateX(72deg)
+      rotateZ(var(--rz, -18deg)) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotateX(72deg)
+      rotateZ(var(--rz, -18deg)) rotate(360deg);
+  }
+}
+
+/* 细环自转（反向） */
+@keyframes ringSpinThin {
+  from {
+    transform: translate(-50%, -50%) rotateX(72deg)
+      rotateZ(var(--rz, -22deg)) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotateX(72deg)
+      rotateZ(var(--rz, -22deg)) rotate(360deg);
+  }
+}
+
+/* 环带亮度呼吸 */
+@keyframes ringBreath {
+  from {
+    opacity: 0.7;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 星球外圈光晕呼吸 */
+@keyframes glowBreath {
+  from {
+    filter: drop-shadow(0 0 var(--glow-min, 40px) var(--planet-glow));
+  }
+  to {
+    filter: drop-shadow(0 0 var(--glow-max, 60px) var(--planet-glow));
   }
 }
 
@@ -549,7 +746,7 @@
     height: min(70vw, 260px);
   }
 
-  .planet {
+  .planetWrap {
     width: min(46vw, 160px);
     height: min(46vw, 160px);
   }
@@ -557,6 +754,21 @@
   .rippleRings {
     width: min(46vw, 160px);
     height: min(46vw, 160px);
+  }
+
+  /* 星点减到 10 个以内 */
+  .planetStars .starDot:nth-child(n + 11) {
+    display: none;
+  }
+
+  /* 环带只保留 2 条（1 主 1 细），隐藏第二条主环 */
+  .ringMain2 {
+    display: none;
+  }
+
+  /* 云层减到 1 个 */
+  .planet .cloud:nth-child(n + 5) {
+    display: none;
   }
 
   .form {
@@ -575,12 +787,17 @@
 
 /* ===== 降级 ===== */
 @media (prefers-reduced-motion: reduce) {
-  .planet {
+  .planetWrap,
+  .planetTexture,
+  .planetStars,
+  .cloud,
+  .ring {
     animation: none;
   }
 
-  .ring {
-    animation: none;
+  /* 保留静态光晕，不呼吸 */
+  .planetWrap {
+    filter: drop-shadow(0 0 var(--glow-min, 40px) var(--planet-glow));
   }
 
   .rippleRing {

@@ -310,10 +310,77 @@ export default function IntroOverlay({ onDone }: IntroOverlayProps) {
             onClick={handlePlanetClick}
             aria-label="点击星球，听见波纹大陆"
           >
-            <span className={styles.planet} data-phase={phase} />
-            <span className={styles.rings} aria-hidden="true">
-              <span className={`${styles.ring} ${styles.ringOuter}`} />
-              <span className={`${styles.ring} ${styles.ringInner}`} />
+            <span className={styles.planetWrap} data-phase={phase}>
+              {/* 星环后半段（在星球之下） */}
+              <span className={styles.rings} data-side="back" aria-hidden="true">
+                <span className={`${styles.ring} ${styles.ringMain}`} />
+                <span className={`${styles.ring} ${styles.ringMain2}`} />
+                <span className={`${styles.ring} ${styles.ringThin}`} />
+              </span>
+
+              {/* 星球本体：三层叠加 */}
+              <span className={styles.planet}>
+                {/* 第 1 层 球体底 */}
+                <span className={styles.planetBase} />
+                {/* 第 2 层 拼图纹路（内联 SVG） */}
+                <svg
+                  className={styles.planetTexture}
+                  viewBox="0 0 100 100"
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M 8,38 C 22,30 28,30 34,36 C 37,39 41,39 44,36 C 50,30 58,30 66,36 C 72,41 78,40 84,36 C 90,32 94,33 96,38"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.5)"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M 6,62 C 18,70 26,70 32,64 C 36,60 40,60 44,64 C 50,70 58,70 66,64 C 72,59 78,60 86,64 C 92,67 96,66 98,62"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.45)"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M 14,50 C 24,44 30,44 34,48 C 37,51 41,51 44,48 C 48,44 54,44 60,48 C 64,51 68,51 72,48 C 76,44 82,44 88,50"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.4)"
+                    strokeWidth="1.2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                {/* 第 3 层 星点 */}
+                <span className={styles.planetStars} aria-hidden="true">
+                  <span className={styles.starDot} style={{ top: "18%", left: "28%" }} />
+                  <span className={`${styles.starDot} ${styles.starGlow}`} style={{ top: "24%", left: "58%" }} />
+                  <span className={styles.starDot} style={{ top: "34%", left: "42%" }} />
+                  <span className={styles.starDot} style={{ top: "42%", left: "72%" }} />
+                  <span className={styles.starDot} style={{ top: "52%", left: "22%" }} />
+                  <span className={`${styles.starDot} ${styles.starGlow}`} style={{ top: "58%", left: "50%" }} />
+                  <span className={styles.starDot} style={{ top: "64%", left: "78%" }} />
+                  <span className={styles.starDot} style={{ top: "70%", left: "34%" }} />
+                  <span className={styles.starDot} style={{ top: "30%", left: "82%" }} />
+                  <span className={`${styles.starDot} ${styles.starGlow}`} style={{ top: "76%", left: "60%" }} />
+                  <span className={styles.starDot} style={{ top: "46%", left: "14%" }} />
+                  <span className={styles.starDot} style={{ top: "82%", left: "44%" }} />
+                  <span className={styles.starDot} style={{ top: "20%", left: "70%" }} />
+                  <span className={styles.starDot} style={{ top: "60%", left: "12%" }} />
+                  <span className={styles.starDot} style={{ top: "38%", left: "56%" }} />
+                </span>
+                {/* 云层 */}
+                <span className={styles.cloud} style={{ top: "22%", left: "18%", ["--cd" as string]: "0s" }} />
+                <span className={`${styles.cloud} ${styles.cloudAlt}`} style={{ top: "54%", left: "52%", ["--cd" as string]: "-4s" }} />
+                <span className={styles.cloud} style={{ top: "72%", left: "28%", ["--cd" as string]: "-8s" }} />
+              </span>
+
+              {/* 星环前半段（在星球之上） */}
+              <span className={styles.rings} data-side="front" aria-hidden="true">
+                <span className={`${styles.ring} ${styles.ringMain}`} />
+                <span className={`${styles.ring} ${styles.ringMain2}`} />
+                <span className={`${styles.ring} ${styles.ringThin}`} />
+              </span>
             </span>
           </button>
         </div>
