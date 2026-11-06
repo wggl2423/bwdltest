@@ -122,7 +122,7 @@ export default function IntroOverlay({ onDone }: IntroOverlayProps) {
     >
       <audio
         ref={audioRef}
-        src="/audio/baiwuliaolai.mp3"
+        src={`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/audio/baiwuliaolai.mp3`}
         preload="auto"
         onError={handleAudioError}
       />

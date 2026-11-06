@@ -1,6 +1,10 @@
 // ===== 波纹大陆数据中心 =====
 // 所有 IP 内容集中在此，组件只读取不写死。
 // 下方文案为示例占位，正式上线前请替换为真实内容。
+
+// GitHub Pages 子路径前缀（Vercel 部署时为空字符串）
+const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
 export type FrameVariant =
   | "north"
   | "east"
@@ -11,12 +15,12 @@ export type FrameVariant =
 
 // 拼图边框 PNG 路径映射。6 个变体对应旋钮位置，不旋转避免裁切。
 export const FRAME_BY_VARIANT: Record<FrameVariant, string> = {
-  north: "/puzzle-frame.png",
-  east: "/puzzle-frame-east.png",
-  south: "/puzzle-frame-south.png",
-  west: "/puzzle-frame-west.png",
-  northWest: "/puzzle-frame-northwest.png",
-  southEast: "/puzzle-frame-southeast.png",
+  north: `${base}/puzzle-frame.png`,
+  east: `${base}/puzzle-frame-east.png`,
+  south: `${base}/puzzle-frame-south.png`,
+  west: `${base}/puzzle-frame-west.png`,
+  northWest: `${base}/puzzle-frame-northwest.png`,
+  southEast: `${base}/puzzle-frame-southeast.png`,
 };
 
 export type Nation = {
@@ -101,7 +105,7 @@ export type NationIntro = {
 export const nationIntro: NationIntro = {
   title: "小人国",
   subtitle: "欢迎来到小人国",
-  cover: "/tinyland/cover.jpg",
+  cover: `${base}/tinyland/cover.jpg`,
   paragraphs: [
     "这里是小人国，波纹大陆的第一站。每一位到访的旅人都能在这里找到属于自己的小小角落。",
     "我们用拼图记录每一个值得珍藏的瞬间，欢迎你来探索、留言、留下属于你的波纹。",
@@ -115,15 +119,15 @@ export const nationIntro: NationIntro = {
 // ===== 团子介绍图片 =====
 // 原型阶段为占位路径；后续直接替换数组里的路径即可更新图片。
 export const tuanziGallery: string[] = [
-  "/tuanzi/placeholder-1.jpg",
-  "/tuanzi/placeholder-2.jpg",
-  "/tuanzi/placeholder-3.jpg",
-  "/tuanzi/placeholder-4.jpg",
-  "/tuanzi/placeholder-5.jpg",
-  "/tuanzi/placeholder-6.jpg",
-  "/tuanzi/placeholder-7.jpg",
-  "/tuanzi/placeholder-8.jpg",
-  "/tuanzi/placeholder-9.jpg",
+  `${base}/tuanzi/placeholder-1.jpg`,
+  `${base}/tuanzi/placeholder-2.jpg`,
+  `${base}/tuanzi/placeholder-3.jpg`,
+  `${base}/tuanzi/placeholder-4.jpg`,
+  `${base}/tuanzi/placeholder-5.jpg`,
+  `${base}/tuanzi/placeholder-6.jpg`,
+  `${base}/tuanzi/placeholder-7.jpg`,
+  `${base}/tuanzi/placeholder-8.jpg`,
+  `${base}/tuanzi/placeholder-9.jpg`,
 ];
 
 // ===== 泡泡探险队条漫 =====
@@ -140,13 +144,13 @@ export const comicIssues: ComicIssue[] = [
     id: 1,
     week: "第 1 周",
     title: "第一期条漫标题",
-    pages: ["/comics/issue1-1.jpg", "/comics/issue1-2.jpg"],
+    pages: [`${base}/comics/issue1-1.jpg`, `${base}/comics/issue1-2.jpg`],
   },
   {
     id: 2,
     week: "第 2 周",
     title: "第二期条漫标题",
-    pages: ["/comics/issue2-1.jpg"],
+    pages: [`${base}/comics/issue2-1.jpg`],
   },
 ];
 
