@@ -272,15 +272,46 @@
     inset 8px 10px 20px rgba(255, 235, 240, 0.3);
 }
 
-/* 第 2 层 拼图纹路 */
+/* 第 2 层 程序化噪声纹理（feTurbulence） */
 .planetTexture {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  opacity: 0.22;
+  opacity: 0.4;
+  mix-blend-mode: soft-light;
   transform: rotate(-12deg);
-  filter: blur(0.3px);
+  animation: planetSpin 40s linear infinite;
+  pointer-events: none;
+}
+
+.textureRectMobile {
+  display: none;
+}
+
+/* 赤道带：水平方向径向渐变带，倾斜 -6°，不随球体旋转 */
+.equatorBand {
+  position: absolute;
+  left: -10%;
+  top: 41%;
+  width: 120%;
+  height: 18%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 255, 255, 0.1),
+    transparent 70%
+  );
+  filter: blur(12px);
+  transform: rotate(-6deg);
+  pointer-events: none;
+}
+
+/* 涡旋点：不规则 blob，随球体旋转 */
+.vortex {
+  position: absolute;
+  background: rgba(212, 138, 143, 0.18);
+  filter: blur(8px);
+  transform: translate(-50%, -50%);
   animation: planetSpin 40s linear infinite;
   pointer-events: none;
 }
@@ -766,8 +797,22 @@
     display: none;
   }
 
-  /* 云层减到 1 个 */
-  .planet .cloud:nth-child(n + 5) {
+  /* 云层减到 1 个（保留第 1 个，隐藏第 2、3 个） */
+  .planet .cloud:nth-child(n + 9) {
+    display: none;
+  }
+
+  /* 纹理：移动端用 numOctaves=3 的滤镜 */
+  .textureRect {
+    display: none;
+  }
+
+  .textureRectMobile {
+    display: block;
+  }
+
+  /* 涡旋点减到 1 个 */
+  .planet .vortex:nth-child(n + 5) {
     display: none;
   }
 
@@ -791,6 +836,7 @@
   .planetTexture,
   .planetStars,
   .cloud,
+  .vortex,
   .ring {
     animation: none;
   }

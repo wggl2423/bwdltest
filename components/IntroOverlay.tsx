@@ -322,35 +322,104 @@ export default function IntroOverlay({ onDone }: IntroOverlayProps) {
               <span className={styles.planet}>
                 {/* 第 1 层 球体底 */}
                 <span className={styles.planetBase} />
-                {/* 第 2 层 拼图纹路（内联 SVG） */}
+                {/* 第 2 层 程序化噪声纹理（feTurbulence） */}
                 <svg
                   className={styles.planetTexture}
                   viewBox="0 0 100 100"
                   preserveAspectRatio="none"
                   aria-hidden="true"
                 >
-                  <path
-                    d="M 8,38 C 22,30 28,30 34,36 C 37,39 41,39 44,36 C 50,30 58,30 66,36 C 72,41 78,40 84,36 C 90,32 94,33 96,38"
-                    fill="none"
-                    stroke="rgba(255,255,255,0.5)"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
+                  <defs>
+                    <filter id="planet-texture">
+                      <feTurbulence
+                        type="fractalNoise"
+                        baseFrequency="0.008 0.015"
+                        numOctaves="4"
+                        seed="7"
+                        result="noise"
+                      />
+                      <feColorMatrix
+                        type="matrix"
+                        values="0.91 0 0 0 0
+                                0 0.55 0 0 0
+                                0 0 0.60 0 0
+                                0.5 0 0 0 0.15"
+                        result="colored"
+                      />
+                      <feGaussianBlur stdDeviation="0.6" />
+                    </filter>
+                    <filter id="planet-texture-mobile">
+                      <feTurbulence
+                        type="fractalNoise"
+                        baseFrequency="0.008 0.015"
+                        numOctaves="3"
+                        seed="7"
+                        result="noise"
+                      />
+                      <feColorMatrix
+                        type="matrix"
+                        values="0.91 0 0 0 0
+                                0 0.55 0 0 0
+                                0 0 0.60 0 0
+                                0.5 0 0 0 0.15"
+                        result="colored"
+                      />
+                      <feGaussianBlur stdDeviation="0.6" />
+                    </filter>
+                  </defs>
+                  <rect
+                    className={styles.textureRect}
+                    width="100"
+                    height="100"
+                    fill="white"
+                    filter="url(#planet-texture)"
                   />
-                  <path
-                    d="M 6,62 C 18,70 26,70 32,64 C 36,60 40,60 44,64 C 50,70 58,70 66,64 C 72,59 78,60 86,64 C 92,67 96,66 98,62"
-                    fill="none"
-                    stroke="rgba(255,255,255,0.45)"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M 14,50 C 24,44 30,44 34,48 C 37,51 41,51 44,48 C 48,44 54,44 60,48 C 64,51 68,51 72,48 C 76,44 82,44 88,50"
-                    fill="none"
-                    stroke="rgba(255,255,255,0.4)"
-                    strokeWidth="1.2"
-                    strokeLinecap="round"
+                  <rect
+                    className={styles.textureRectMobile}
+                    width="100"
+                    height="100"
+                    fill="white"
+                    filter="url(#planet-texture-mobile)"
                   />
                 </svg>
+
+                {/* 赤道带 */}
+                <span className={styles.equatorBand} aria-hidden="true" />
+
+                {/* 涡旋点 */}
+                <span
+                  className={styles.vortex}
+                  style={{
+                    top: "32%",
+                    left: "30%",
+                    width: "16%",
+                    height: "14%",
+                    borderRadius: "42% 58% 63% 37% / 45% 40% 60% 55%",
+                  }}
+                  aria-hidden="true"
+                />
+                <span
+                  className={styles.vortex}
+                  style={{
+                    top: "55%",
+                    left: "58%",
+                    width: "14%",
+                    height: "16%",
+                    borderRadius: "58% 42% 37% 63% / 55% 60% 40% 45%",
+                  }}
+                  aria-hidden="true"
+                />
+                <span
+                  className={styles.vortex}
+                  style={{
+                    top: "68%",
+                    left: "28%",
+                    width: "12%",
+                    height: "13%",
+                    borderRadius: "50% 50% 45% 55% / 60% 45% 55% 40%",
+                  }}
+                  aria-hidden="true"
+                />
                 {/* 第 3 层 星点 */}
                 <span className={styles.planetStars} aria-hidden="true">
                   <span className={styles.starDot} style={{ top: "18%", left: "28%" }} />
