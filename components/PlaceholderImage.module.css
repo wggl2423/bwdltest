@@ -1,0 +1,21 @@
+.image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.placeholder {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(150deg, var(--pink-soft), var(--surface));
+  color: var(--text-muted);
+  border-radius: inherit;
+}
+
+.label {
+  font-size: 13px;
+  letter-spacing: 0.08em;
+}

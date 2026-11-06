@@ -1,0 +1,155 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.textarea {
+  width: 100%;
+  min-height: 96px;
+  padding: 12px 14px;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  resize: vertical;
+}
+
+.textarea:focus-visible {
+  border-color: var(--pink-primary);
+  outline: none;
+}
+
+.formRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.counter {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.counter.over {
+  color: var(--pink-deep);
+}
+
+.submit {
+  height: 44px;
+  min-height: 44px;
+  padding: 0 24px;
+  font-size: 13px;
+  background: var(--pink-primary);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  transition: background-color 200ms ease-out;
+}
+
+.submit:hover:not(:disabled) {
+  background: var(--pink-deep);
+}
+
+.submit:disabled {
+  background: var(--pink-soft);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.empty {
+  padding: 32px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.item {
+  position: relative;
+  padding: 16px 18px;
+  padding-right: 56px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.itemHead {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.name {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.time {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.itemContent {
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.delete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.delete:hover {
+  color: var(--pink-deep);
+}
+
+@media (max-width: 640px) {
+  .formRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .submit {
+    width: 100%;
+  }
+
+  /* 输入框聚焦时避免被虚拟键盘遮挡 */
+  .textarea:focus {
+    scroll-margin-bottom: 40vh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .submit {
+    transition: none;
+  }
+}

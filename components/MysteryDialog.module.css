@@ -1,0 +1,132 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(61, 58, 56, 0.32);
+  animation: backdropIn 200ms ease-out;
+}
+
+.panel {
+  position: relative;
+  z-index: 1;
+  width: min(360px, 100%);
+  padding: 40px 28px 32px;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 16px 44px rgba(61, 58, 56, 0.18);
+  text-align: center;
+  animation: panelIn 240ms ease-out;
+}
+
+.close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--text-muted);
+  border-radius: 50%;
+  transition: color 200ms ease-out;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.close:hover {
+  color: var(--pink-deep);
+}
+
+.eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  color: var(--text-muted);
+}
+
+.lockBox {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  margin: 20px auto 18px;
+  color: var(--pink-deep);
+  border: 1px dashed var(--pink-primary);
+  border-radius: var(--radius-md);
+}
+
+.lockBox svg {
+  width: 34px;
+  height: 34px;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+}
+
+.copy {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+@keyframes backdropIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes panelIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes sheetUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 640px) {
+  .overlay {
+    align-items: end;
+    padding: 0;
+  }
+
+  .panel {
+    width: 100%;
+    padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px));
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    animation: sheetUp 260ms ease-out;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop,
+  .panel {
+    animation: none;
+  }
+}
