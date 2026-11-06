@@ -29,15 +29,16 @@
 
 .title {
   margin-top: 6px;
-  font-size: 34px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
+  font-family: "LXGW WenKai", "PingFang SC", "Noto Sans SC", sans-serif;
+  font-weight: 400;
+  font-size: 2.4rem;
+  letter-spacing: 0.08em;
   color: var(--text);
 }
 
 .subtitle {
   margin-top: 10px;
-  font-size: 14px;
+  font-size: 0.9rem;
   letter-spacing: 0.06em;
   color: var(--text-muted);
 }
@@ -64,6 +65,12 @@
   }
   to {
     opacity: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .title {
+    font-size: 1.8rem;
   }
 }
 

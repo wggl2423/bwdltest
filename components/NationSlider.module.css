@@ -1,148 +1,378 @@
+/* ============================================================
+   六国滑动卡片：多层视觉 + 像素元素 + 滑动反馈
+   ============================================================ */
+
 .slider {
+  position: relative;
   width: 100%;
-  overflow: hidden;
 }
 
 .track {
   display: flex;
-  gap: 24px;
+  gap: 20px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
-  overscroll-behavior-x: contain;
-  touch-action: pan-x;
-  /* 首尾卡片也能停在正中，同时左右露出相邻卡片边缘 */
-  padding: 56px calc(50% - 140px) 36px;
   scrollbar-width: none;
+  padding: 40px 24px 56px;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
 }
 
 .track::-webkit-scrollbar {
   display: none;
 }
 
+/* 滑动背景小方块 */
+.bgSquares {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.6;
+  background-image: radial-gradient(
+    rgba(232, 180, 184, 0.15) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
+  animation: bgSquaresTwinkle 4s ease-in-out infinite alternate;
+}
+
+/* 底部渐变遮罩 */
+.bottomMask {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(to top, var(--bg), transparent);
+  pointer-events: none;
+}
+
+/* ===== 卡片 ===== */
 .card {
   position: relative;
-  display: flex;
   flex: 0 0 280px;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   width: 280px;
   height: 340px;
-  padding: 30px;
   scroll-snap-align: center;
+  border: none;
+  padding: 0;
   background: transparent;
-  border-radius: var(--radius-lg);
-  color: var(--text);
   cursor: pointer;
-  transition: transform 240ms ease-out;
+  /* 入场交错淡入上浮 */
+  opacity: 0;
+  animation: cardEntrance 400ms ease-out forwards;
+  transition: transform 300ms ease-out, opacity 300ms ease-out,
+    box-shadow 300ms ease-out;
 }
 
-.card:hover {
-  transform: translateY(-3px);
+.cardLocked {
+  cursor: default;
 }
 
-.card:hover .frame {
-  filter: drop-shadow(0 9px 16px rgba(61, 58, 56, 0.12));
+/* active 卡片 */
+.cardActive {
+  transform: scale(1);
+  opacity: 1;
 }
 
-.card:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 4px;
+.card:not(.cardActive) {
+  transform: scale(0.92);
+  opacity: 0.6;
 }
 
-/* 底色收在拼图边框内部，避免卡片矩形底透出边框外 */
-.cardSurface {
+.cardActive .pixelIconWrap {
+  animation: pixelBounce 300ms ease-out;
+}
+
+/* ---- 第 1 层：底层纹理 ---- */
+.cardTexture {
   position: absolute;
   inset: 15px;
-  z-index: 0;
   border-radius: var(--radius-md);
-  background: linear-gradient(155deg, var(--pink-soft), var(--surface) 72%);
+  background:
+    linear-gradient(135deg, var(--pink-soft), var(--surface)),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 7px,
+      rgba(212, 138, 143, 0.06) 7px,
+      rgba(212, 138, 143, 0.06) 8px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 7px,
+      rgba(212, 138, 143, 0.06) 7px,
+      rgba(212, 138, 143, 0.06) 8px
+    );
+  background-blend-mode: normal, multiply, multiply;
 }
 
-/* 透明拼图边框叠加在上层，凸起方向由数据里的 frameVariant 决定 */
+/* ---- 第 2 层：装饰光斑 ---- */
+.cardGlow {
+  position: absolute;
+  inset: 15px;
+  border-radius: var(--radius-md);
+  pointer-events: none;
+  background:
+    radial-gradient(
+      circle at 20% 25%,
+      var(--planet-glow),
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 80% 70%,
+      rgba(232, 180, 184, 0.2),
+      transparent 45%
+    );
+  filter: blur(30px);
+  transition: transform 400ms ease-out;
+}
+
+.card:hover .cardGlow {
+  transform: translate(4px, -4px);
+}
+
+/* ---- 第 3 层：像素元素 ---- */
+.pixelLayer {
+  position: absolute;
+  inset: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 24px 24px 0 0;
+  gap: 6px;
+  z-index: 2;
+}
+
+.pixelIconWrap {
+  transform: rotate(-6deg);
+  filter: drop-shadow(2px 2px 0 rgba(212, 138, 143, 0.2));
+}
+
+.pixelLabel {
+  font-size: 10px;
+  padding: 2px 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+/* ---- 第 4 层：主体内容 ---- */
+.content {
+  position: absolute;
+  inset: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 44px;
+  gap: 6px;
+  z-index: 3;
+}
+
+.name {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text);
+  letter-spacing: 0.06em;
+}
+
+.nameUnderline {
+  display: block;
+  width: 60%;
+  height: 2px;
+  background: var(--pink-primary);
+  border-radius: 1px;
+  margin-top: 2px;
+}
+
+.tagline {
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+.lockIcon {
+  margin-bottom: 8px;
+  color: var(--text-muted);
+}
+
+/* ---- 第 5 层：拼图边框 ---- */
 .frame {
   position: absolute;
   top: -9.5%;
   left: -11.5%;
-  z-index: 2;
   width: 123%;
   height: 119%;
   background-repeat: no-repeat;
-  background-position: center;
   background-size: 100% 100%;
   pointer-events: none;
-  filter: drop-shadow(0 5px 10px rgba(61, 58, 56, 0.08));
+  z-index: 4;
+  filter: drop-shadow(0 4px 12px rgba(61, 58, 56, 0.08));
 }
 
-.content {
-  position: relative;
-  z-index: 1;
+/* 待解锁卡灰度 + 模糊 */
+.cardLocked .cardTexture,
+.cardLocked .cardGlow,
+.cardLocked .pixelLayer,
+.cardLocked .content {
+  filter: grayscale(0.7) blur(0.5px);
+  opacity: 0.7;
+}
+
+/* ---- 四角像素咬合点 ---- */
+.cornerDotTL,
+.cornerDotTR,
+.cornerDotBL,
+.cornerDotBR {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--pink-primary);
+  z-index: 5;
+}
+
+.cornerDotTL {
+  top: 12px;
+  left: 12px;
+}
+.cornerDotTR {
+  top: 12px;
+  right: 12px;
+  background: var(--accent);
+}
+.cornerDotBL {
+  bottom: 12px;
+  left: 12px;
+  background: var(--accent);
+}
+.cornerDotBR {
+  bottom: 12px;
+  right: 12px;
+}
+
+/* ===== 索引指示器 ===== */
+.indicator {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 14px;
+  justify-content: center;
+  gap: 10px;
+  margin-top: -40px;
+  padding-bottom: 16px;
 }
 
-.icon {
-  display: block;
-  width: 64px;
-  height: 64px;
-  color: var(--pink-deep);
+.dots {
+  display: flex;
+  gap: 6px;
 }
 
-.icon svg {
-  width: 100%;
-  height: 100%;
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  transition: background 200ms, border-color 200ms, transform 200ms;
 }
 
-.lockIcon {
-  display: grid;
-  place-items: center;
-  width: 64px;
-  height: 64px;
-  color: var(--text-muted);
+.dot:hover {
+  transform: scale(1.2);
 }
 
-.lockIcon svg {
-  width: 44px;
-  height: 44px;
-}
-
-.name {
-  font-size: 20px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-}
-
-.tagline {
-  font-size: 13px;
-  color: var(--text-muted);
-}
-
-/* 待解锁：灰度 + 模糊，锁图标保持清晰 */
-.cardLocked {
-  color: var(--text-muted);
-}
-
-.cardLocked .cardSurface {
-  background: linear-gradient(155deg, #ece9e7, #fbfaf9 72%);
-}
-
-.cardLocked .name,
-.cardLocked .tagline {
-  color: var(--text-muted);
-  filter: blur(1.2px);
-}
-
-.cardLocked .frame {
-  filter: grayscale(1) blur(0.8px);
+.dotActive {
+  background: var(--pink-primary);
+  border-color: var(--pink-primary);
 }
 
 .counter {
-  margin: 0;
-  padding-bottom: 20px;
-  text-align: center;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-muted);
-  letter-spacing: 0.12em;
+  letter-spacing: 0.04em;
+}
+
+/* ===== keyframes ===== */
+@keyframes cardEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pixelBounce {
+  0% {
+    transform: rotate(-6deg) scale(1);
+  }
+  50% {
+    transform: rotate(-6deg) scale(1.1);
+  }
+  100% {
+    transform: rotate(-6deg) scale(1);
+  }
+}
+
+@keyframes bgSquaresTwinkle {
+  0% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+/* ===== 移动端 ===== */
+@media (max-width: 640px) {
+  .track {
+    padding: 24px 16px 48px;
+    gap: 12px;
+  }
+
+  .card {
+    flex-basis: 240px;
+    width: 240px;
+    height: 300px;
+  }
+
+  .pixelIconWrap svg {
+    width: 40px;
+    height: 40px;
+  }
+
+  .cardGlow {
+    background: radial-gradient(
+      circle at 30% 30%,
+      var(--planet-glow),
+      transparent 50%
+    );
+  }
+}
+
+/* ===== 降级 ===== */
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    animation: none;
+    opacity: 1;
+    transition: opacity 300ms ease-out;
+  }
+
+  .card:not(.cardActive) {
+    transform: none;
+    opacity: 0.6;
+  }
+
+  .pixelIconWrap {
+    animation: none;
+  }
+
+  .bgSquares {
+    animation: none;
+  }
 }

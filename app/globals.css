@@ -4,6 +4,9 @@
    更新主题色只需改这里的变量。
    ============================================================ */
 
+/* 霞鹜文楷：主标题专用。加载失败时由 font-family 降级链自动兜底 */
+@import url("https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/style.css");
+
 :root {
   /* 色板 */
   --pink-primary: #e8b4b8;
@@ -16,14 +19,10 @@
   --accent: #a8bfc4; /* 低饱和雾蓝，仅用于状态和小面积点缀 */
   --border: #e5ddd8;
 
-  /* 宇宙 / 星球主题色（开场层 + 留言星空区共用） */
-  --space-bg: #14101f;
-  --space-deep: #0d0a14;
-  --space-mid: #241c33;
+  /* 星球色（开场层星球 + 流星光点共用） */
   --planet-pink: #e8b4b8;
   --planet-deep: #c97f8a;
   --planet-glow: rgba(232, 180, 184, 0.35);
-  --star-white: rgba(255, 255, 255, 0.85);
 
   /* 圆角 */
   --radius-sm: 8px;

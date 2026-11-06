@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { MESSAGES_KEY, type Message } from "@/lib/data";
 import styles from "./IntroOverlay.module.css";
 
 type Phase = "idle" | "playing" | "entering" | "done";
@@ -12,6 +13,7 @@ type IntroOverlayProps = {
 const NAME_MAX = 12;
 const RIPPLE_MS = 800;
 const FADE_MS = 300;
+const MAX_METEORS = 12;
 
 function prefersReducedMotion() {
   return (
@@ -20,7 +22,26 @@ function prefersReducedMotion() {
   );
 }
 
-/** canvas 绘制星空：80–120 个白点，随机位置/透明度，缓慢闪烁 */
+function loadMessages(): Message[] {
+  try {
+    const raw = localStorage.getItem(MESSAGES_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as Message[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function formatTime(ts: number) {
+  const date = new Date(ts);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
+    date.getDate()
+  )} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+/** canvas 绘制浅色星空：白 + 粉色小点，低透明度，缓慢闪烁 */
 function drawStars(canvas: HTMLCanvasElement) {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
@@ -33,26 +54,32 @@ function drawStars(canvas: HTMLCanvasElement) {
   ctx.scale(dpr, dpr);
 
   const isMobile = w < 640;
-  const count = isMobile ? 50 : 100;
+  const count = isMobile ? 40 : 70;
 
-  // 预生成星星参数（位置、基础透明度、闪烁相位）
-  const stars = Array.from({ length: count }, () => ({
-    x: Math.random() * w,
-    y: Math.random() * h,
-    r: Math.random() * 1.2 + 0.3,
-    baseAlpha: Math.random() * 0.6 + 0.2,
-    phase: Math.random() * Math.PI * 2,
-  }));
+  const stars = Array.from({ length: count }, () => {
+    const usePink = Math.random() > 0.5;
+    return {
+      x: Math.random() * w,
+      y: Math.random() * h,
+      r: Math.random() * 1.1 + 0.3,
+      baseAlpha: Math.random() * 0.25 + 0.15,
+      phase: Math.random() * Math.PI * 2,
+      pink: usePink,
+    };
+  });
 
   let raf = 0;
 
   const render = (t: number) => {
     ctx.clearRect(0, 0, w, h);
     for (const s of stars) {
-      const alpha = s.baseAlpha + Math.sin(t * 0.001 + s.phase) * 0.2;
+      const alpha = s.baseAlpha + Math.sin(t * 0.0008 + s.phase) * 0.12;
+      const a = Math.max(0.05, Math.min(0.4, alpha));
       ctx.beginPath();
       ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255, 255, 255, ${Math.max(0.05, Math.min(0.9, alpha))})`;
+      ctx.fillStyle = s.pink
+        ? `rgba(232, 180, 184, ${a})`
+        : `rgba(255, 255, 255, ${a})`;
       ctx.fill();
     }
     raf = requestAnimationFrame(render);
@@ -62,8 +89,33 @@ function drawStars(canvas: HTMLCanvasElement) {
   return () => cancelAnimationFrame(raf);
 }
 
+type MeteorParams = {
+  angle: number; // 极角（弧度），限制在上半圆 + 两侧
+  radius: number; // 距星球中心的倍数（1.4–2.2）
+  dx: number;
+  dy: number;
+  duration: number;
+  delay: number;
+};
+
+/** 流星位置用极坐标：距星球中心 1.4–2.2 倍半径，角度限制在上半圆和左右两侧 */
+function makeMeteorParams(count: number): MeteorParams[] {
+  return Array.from({ length: count }, () => {
+    // 角度范围：-225° 到 45°（即上半圆 + 左右两侧，下半圆留空）
+    const angleDeg = -225 + Math.random() * 270;
+    const angle = (angleDeg * Math.PI) / 180;
+    return {
+      angle,
+      radius: 1.4 + Math.random() * 0.8,
+      dx: (Math.random() - 0.5) * 80,
+      dy: (Math.random() - 0.5) * 80,
+      duration: 24 + Math.random() * 16,
+      delay: Math.random() * 8,
+    };
+  });
+}
+
 export default function IntroOverlay({ onDone }: IntroOverlayProps) {
-  // 状态机：idle → playing → entering → done
   const [phase, setPhase] = useState<Phase>("idle");
   const [name, setName] = useState("");
   const [ripple, setRipple] = useState<{
@@ -71,24 +123,28 @@ export default function IntroOverlay({ onDone }: IntroOverlayProps) {
     y: number;
     size: number;
   } | null>(null);
+  const [activeMeteor, setActiveMeteor] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const enterButtonRef = useRef<HTMLButtonElement>(null);
   const starsCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  // 读取 localStorage 留言（与你说我听共享同一份数据）
+  useEffect(() => {
+    setMessages(loadMessages());
+  }, []);
 
   // canvas 星空
   useEffect(() => {
     const canvas = starsCanvasRef.current;
     if (!canvas) return;
     const cleanup = drawStars(canvas);
-
     const handleResize = () => {
       cleanup?.();
-      const next = drawStars(canvas);
-      // 重新绘制；清理函数在 effect 清理时统一处理
+      drawStars(canvas);
     };
     window.addEventListener("resize", handleResize);
-
     return () => {
       cleanup?.();
       window.removeEventListener("resize", handleResize);
@@ -98,25 +154,33 @@ export default function IntroOverlay({ onDone }: IntroOverlayProps) {
   const trimmedName = name.trim();
   const canEnter = trimmedName.length > 0 && trimmedName.length <= NAME_MAX;
 
-  // 点击星球：播放音乐并进入名字输入
+  // 流星数据：取最新 12 条；无留言时用 4–6 颗装饰流星
+  const visibleMessages = useMemo(
+    () => [...messages].sort((a, b) => b.createdAt - a.createdAt).slice(0, MAX_METEORS),
+    [messages]
+  );
+
+  const meteorCount = visibleMessages.length > 0 ? visibleMessages.length : 5;
+  const meteorParams = useMemo(
+    () => makeMeteorParams(meteorCount),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [meteorCount]
+  );
+
   const handlePlanetClick = () => {
     if (phase !== "idle") return;
     setPhase("playing");
-
     const audio = audioRef.current;
     if (!audio) return;
     audio.volume = 0.6;
-    // 必须在点击事件的同步调用栈里触发 play()，否则会被浏览器自动播放策略拦截
     const playPromise = audio.play();
     if (playPromise) {
       playPromise.catch((error) => {
-        // 播放失败静默降级：星球照常、名字照填、仍可进入
         console.error("背景音乐播放失败，已降级为静音模式", error);
       });
     }
   };
 
-  // 跳过音乐，直接到名字输入
   const handleSkip = () => {
     if (phase === "entering" || phase === "done") return;
     audioRef.current?.pause();
@@ -127,25 +191,20 @@ export default function IntroOverlay({ onDone }: IntroOverlayProps) {
     console.error("背景音乐加载失败，已降级为静音模式");
   };
 
-  // 以点击坐标为圆心计算波纹尺寸，scale 0 → 6 爆发
   const beginEntering = (x: number, y: number) => {
     if (phase !== "playing" || !canEnter) return;
-
     localStorage.setItem("visitorName", trimmedName);
     setPhase("entering");
-
     if (prefersReducedMotion()) {
       setRipple(null);
       return;
     }
-
     const maxX = Math.max(x, window.innerWidth - x);
     const maxY = Math.max(y, window.innerHeight - y);
     const size = Math.ceil(Math.sqrt(maxX ** 2 + maxY ** 2) * 2 + 40);
     setRipple({ x, y, size });
   };
 
-  // 键盘回车提交时没有鼠标坐标，用按钮中心兜底
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const rect = enterButtonRef.current?.getBoundingClientRect();
@@ -154,7 +213,6 @@ export default function IntroOverlay({ onDone }: IntroOverlayProps) {
     beginEntering(x, y);
   };
 
-  // 波纹扩散结束后进入 done
   useEffect(() => {
     if (phase !== "entering") return;
     const timer = window.setTimeout(
@@ -164,7 +222,6 @@ export default function IntroOverlay({ onDone }: IntroOverlayProps) {
     return () => window.clearTimeout(timer);
   }, [phase]);
 
-  // done 状态开场层淡出，随后通知父组件
   useEffect(() => {
     if (phase !== "done") return;
     const timer = window.setTimeout(
@@ -181,6 +238,7 @@ export default function IntroOverlay({ onDone }: IntroOverlayProps) {
       role="dialog"
       aria-modal="true"
       aria-label="波纹大陆开场"
+      onClick={() => setActiveMeteor(null)}
     >
       <canvas ref={starsCanvasRef} className={styles.stars} aria-hidden="true" />
 
@@ -200,20 +258,66 @@ export default function IntroOverlay({ onDone }: IntroOverlayProps) {
       <div className={styles.center}>
         <span className={styles.brand}>波纹大陆</span>
 
-        <button
-          type="button"
-          className={styles.planetButton}
-          onClick={handlePlanetClick}
-          aria-label="点击星球，听见波纹大陆"
-        >
-          <span className={styles.planet} data-phase={phase} />
-          <span className={styles.rings} aria-hidden="true">
-            <span className={`${styles.ring} ${styles.ringOuter}`} />
-            <span className={`${styles.ring} ${styles.ringInner}`} />
-          </span>
-        </button>
+        {/* 流星环绕区：相对星球定位 */}
+        <div className={styles.planetStage}>
+          {/* 流星 */}
+          <div className={styles.meteorField} aria-hidden={activeMeteor === null}>
+            {meteorParams.map((p, i) => {
+              const msg = visibleMessages[i];
+              const isActive = activeMeteor === (msg?.id ?? `decor-${i}`);
+              const preview = msg
+                ? msg.content.length > 60
+                  ? msg.content.slice(0, 60) + "…"
+                  : msg.content
+                : "";
+              return (
+                <div
+                  key={msg?.id ?? `decor-${i}`}
+                  className={`${styles.meteor} ${msg ? "" : styles.meteorDecor}`}
+                  style={{
+                    ["--angle" as string]: `${p.angle}rad`,
+                    ["--radius" as string]: `${p.radius}`,
+                    ["--dx" as string]: `${p.dx}px`,
+                    ["--dy" as string]: `${p.dy}px`,
+                    ["--dur" as string]: `${p.duration}s`,
+                    ["--delay" as string]: `${p.delay}s`,
+                  }}
+                  onClick={(e) => {
+                    if (!msg) return;
+                    e.stopPropagation();
+                    setActiveMeteor(isActive ? null : msg.id);
+                  }}
+                >
+                  <span className={styles.meteorCore} />
+                  <span className={styles.meteorTail} />
+                  {msg && isActive && (
+                    <div className={styles.bubble} onClick={(e) => e.stopPropagation()}>
+                      <div className={styles.bubbleHead}>
+                        <span className={styles.bubbleName}>{msg.name}</span>
+                        <span className={styles.bubbleTime}>{formatTime(msg.createdAt)}</span>
+                      </div>
+                      <p className={styles.bubbleContent}>{preview}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
 
-        {/* 波纹震荡环：仅 idle / playing 显示 */}
+          <button
+            type="button"
+            className={styles.planetButton}
+            onClick={handlePlanetClick}
+            aria-label="点击星球，听见波纹大陆"
+          >
+            <span className={styles.planet} data-phase={phase} />
+            <span className={styles.rings} aria-hidden="true">
+              <span className={`${styles.ring} ${styles.ringOuter}`} />
+              <span className={`${styles.ring} ${styles.ringInner}`} />
+            </span>
+          </button>
+        </div>
+
         {(phase === "idle" || phase === "playing") && (
           <div className={styles.rippleRings} data-phase={phase} aria-hidden="true">
             <span className={styles.rippleRing} />

@@ -29,6 +29,7 @@ export type Nation = {
   tagline: string;
   frameVariant: FrameVariant;
   enterable: boolean; // 只有小人国为 true
+  pixelIcon: "sheep" | "cup" | "rabbit" | "planet" | "star" | "question";
 };
 
 export const nations: Nation[] = [
@@ -38,6 +39,7 @@ export const nations: Nation[] = [
     tagline: "波纹的小小世界",
     frameVariant: "north",
     enterable: true,
+    pixelIcon: "sheep",
   },
   {
     id: "food",
@@ -45,6 +47,7 @@ export const nations: Nation[] = [
     tagline: "美味正在筹备",
     frameVariant: "east",
     enterable: false,
+    pixelIcon: "cup",
   },
   {
     id: "eleven",
@@ -52,6 +55,7 @@ export const nations: Nation[] = [
     tagline: "即将开启",
     frameVariant: "south",
     enterable: false,
+    pixelIcon: "rabbit",
   },
   {
     id: "bo",
@@ -59,6 +63,7 @@ export const nations: Nation[] = [
     tagline: "敬请期待",
     frameVariant: "west",
     enterable: false,
+    pixelIcon: "planet",
   },
   {
     id: "children",
@@ -66,6 +71,7 @@ export const nations: Nation[] = [
     tagline: "童心未泯",
     frameVariant: "northWest",
     enterable: false,
+    pixelIcon: "star",
   },
   {
     id: "mystery",
@@ -73,6 +79,7 @@ export const nations: Nation[] = [
     tagline: "神秘预告",
     frameVariant: "southEast",
     enterable: false,
+    pixelIcon: "question",
   },
 ];
 

@@ -1,17 +1,16 @@
 /* ============================================================
-   你说我听 · 流星漂浮留言区
-   留言仍存 localStorage；正式版需接入后端或表单服务。
+   你说我听 · 普通留言列表
+   留言存 localStorage；正式版需接入后端或表单服务。
    ============================================================ */
 
 .wrapper {
   display: flex;
-  gap: 20px;
-  align-items: stretch;
+  flex-direction: column;
+  gap: 16px;
 }
 
-/* ---- 输入区（约 40%） ---- */
+/* ---- 输入区 ---- */
 .form {
-  flex: 0 0 40%;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -40,6 +39,10 @@
   outline: none;
 }
 
+.textarea:focus {
+  scroll-margin-bottom: 40vh;
+}
+
 .formRow {
   display: flex;
   align-items: center;
@@ -63,13 +66,12 @@
   font-size: 13px;
   background: var(--pink-primary);
   border-radius: var(--radius-sm);
-  color: var(--text);
+  color: #fff;
   transition: background-color 200ms ease-out;
 }
 
 .submit:hover:not(:disabled) {
   background: var(--pink-deep);
-  color: #fff;
 }
 
 .submit:disabled {
@@ -78,183 +80,19 @@
   cursor: not-allowed;
 }
 
-/* ---- 星空留言区 ---- */
-.starField {
-  flex: 1 1 auto;
-  position: relative;
-  min-height: 360px;
-  overflow: hidden;
-  border-radius: var(--radius-lg);
-  background:
-    radial-gradient(
-      120% 80% at 60% 20%,
-      var(--space-mid),
-      var(--space-deep) 75%
-    );
-  border: 1px solid rgba(232, 180, 184, 0.15);
-}
-
-.emptyHint {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
+/* ---- 空状态 ---- */
+.empty {
+  padding: 32px;
+  text-align: center;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.4);
-  pointer-events: none;
-}
-
-/* ---- 流星 ---- */
-.meteor {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  transform: translate(-50%, -50%);
-  cursor: pointer;
-  z-index: 1;
-  /* 漂移 + 呼吸，使用 CSS 变量控制参数 */
-  animation:
-    meteorDrift var(--dur) ease-in-out var(--delay) infinite alternate,
-    meteorBreathe calc(var(--dur) * 0.6) ease-in-out var(--delay) infinite;
-}
-
-.meteorCore {
-  display: block;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    #fff 0%,
-    var(--planet-pink) 50%,
-    transparent 100%
-  );
-  box-shadow: 0 0 8px var(--planet-glow);
-}
-
-.meteorTail {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 50px;
-  height: 2px;
-  transform: translate(-100%, -50%) rotate(135deg);
-  transform-origin: right center;
-  background: linear-gradient(
-    to right,
-    transparent,
-    rgba(255, 255, 255, 0.6),
-    var(--planet-pink)
-  );
-  border-radius: 1px;
-}
-
-/* 新留言从右下角飞入 */
-.meteorNew {
-  animation:
-    meteorFlyIn 1.2s ease-out forwards,
-    meteorDrift var(--dur) ease-in-out calc(var(--delay) + 1.2s) infinite
-      alternate,
-    meteorBreathe calc(var(--dur) * 0.6) ease-in-out calc(var(--delay) + 1.2s)
-      infinite;
-}
-
-.meteorNew .meteorTail {
-  opacity: 0;
-  animation: tailFadeIn 0.4s ease-out 1.2s forwards;
-}
-
-/* ---- 留言气泡 ---- */
-.bubble {
-  position: absolute;
-  bottom: calc(100% + 10px);
-  left: 50%;
-  transform: translateX(-50%);
-  width: 220px;
-  padding: 12px 14px;
-  background: rgba(20, 16, 31, 0.92);
-  border: 1px solid rgba(232, 180, 184, 0.25);
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px dashed var(--border);
   border-radius: var(--radius-md);
-  color: #fff;
-  z-index: 5;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-  animation: bubbleIn 160ms ease-out;
 }
 
-/* 气泡小箭头 */
-.bubble::after {
-  content: "";
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 6px solid transparent;
-  border-top-color: rgba(20, 16, 31, 0.92);
-}
-
-.bubbleHead {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.bubbleName {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--planet-pink);
-}
-
-.bubbleTime {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.bubbleContent {
-  margin: 6px 0 8px;
-  font-size: 13px;
-  line-height: 1.6;
-  color: rgba(255, 255, 255, 0.9);
-  word-break: break-word;
-}
-
-.bubbleDelete {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.5);
-  padding: 2px 8px;
-  border-radius: 4px;
-  transition: color 150ms, background 150ms;
-}
-
-.bubbleDelete:hover {
-  color: #fff;
-  background: rgba(232, 180, 184, 0.2);
-}
-
-/* ---- 查看全部按钮 ---- */
-.viewAll {
-  position: absolute;
-  bottom: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 6px 14px;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
-  background: rgba(20, 16, 31, 0.6);
-  border: 1px solid rgba(232, 180, 184, 0.2);
-  border-radius: 999px;
-  z-index: 4;
-  transition: background 150ms, color 150ms;
-}
-
-.viewAll:hover {
-  color: #fff;
-  background: rgba(232, 180, 184, 0.2);
-}
-
-/* ---- 超出留言的普通列表 ---- */
-.overflowList {
-  width: 100%;
+/* ---- 留言列表 ---- */
+.list {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -312,70 +150,24 @@
   color: var(--pink-deep);
 }
 
-/* ===== keyframes ===== */
-@keyframes meteorDrift {
-  from {
-    transform: translate(-50%, -50%) translate(0, 0);
-  }
-  to {
-    transform: translate(-50%, -50%) translate(var(--dx), var(--dy));
-  }
+/* ---- 查看全部 ---- */
+.viewAll {
+  align-self: center;
+  padding: 8px 20px;
+  font-size: 12px;
+  color: var(--pink-deep);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  transition: background 150ms;
 }
 
-@keyframes meteorBreathe {
-  0%,
-  100% {
-    opacity: 0.4;
-  }
-  50% {
-    opacity: 0.9;
-  }
+.viewAll:hover {
+  background: var(--pink-soft);
 }
 
-@keyframes meteorFlyIn {
-  from {
-    transform: translate(100vw, 100vh) scale(0.3);
-    opacity: 0;
-  }
-  to {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 1;
-  }
-}
-
-@keyframes tailFadeIn {
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes bubbleIn {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-}
-
-/* ===== 移动端：上下排列 ===== */
+/* ===== 移动端 ===== */
 @media (max-width: 640px) {
-  .wrapper {
-    flex-direction: column;
-  }
-
-  .form {
-    flex: none;
-    width: 100%;
-  }
-
-  .starField {
-    width: 100%;
-    min-height: 320px;
-  }
-
   .formRow {
     flex-direction: column;
     align-items: stretch;
@@ -384,33 +176,11 @@
   .submit {
     width: 100%;
   }
-
-  .textarea:focus {
-    scroll-margin-bottom: 40vh;
-  }
 }
 
-/* ===== 降级：流星停止漂移，静态网格排列 ===== */
+/* ===== 降级 ===== */
 @media (prefers-reduced-motion: reduce) {
-  .meteor {
-    animation: none;
-    opacity: 0.85;
-  }
-
-  .meteorNew {
-    animation: none;
-  }
-
-  .meteorNew .meteorTail {
-    opacity: 1;
-    animation: none;
-  }
-
   .submit {
     transition: none;
-  }
-
-  .bubble {
-    animation: none;
   }
 }
